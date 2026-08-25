@@ -15,10 +15,78 @@ This powershell automation aims to audit and pre-process the backup environment 
 
 ## Currently Tested Job Types
 
-- [X] Windows Agent Backup
-- [X] Hyper-V Backup
-- [X] File Backup
-- [ ] Windows Agent Policy
+| Job type            | Implemented | Tested  | Notes                             |
+|---------------------|-------------|---------|-----------------------------------|
+| Hyper-V VM Backup   | Yes         | Yes     | VM scope                          |
+| Windows Agent Backup| Yes         | Yes     | Computer scope                    |
+| File Share Backup   | Yes         | Yes     | File share scope                  |
+| Backup Copy         | Yes         | Partial | Source normalization              |
+| Windows Workstation | Yes         | Partial | Resolved through protection group |
+| Windows Agent Policy| Yes         | Partial | Only windows                      |
+
+# Quick Start
+
+## 1. Clone the Repository
+
+```bash
+git clone https://github.com/angeluciel/veeam-inventory.git
+cd veeam-inventory
+``` 
+
+## 2. Install the required PowerShell modules
+Veeam-Inventory required PowerShell 7 or newer, and uses `Microsoft.PowerShell.SecreStore` to store credentials.
+
+```PowerShell
+Install-Module Microsoft.PowerShell.SecretManagement, Microsoft.PowerShell.SecretStore -Scope CurrentUser
+```
+
+## 3. Create your configuration file
+Copy the example configuration:
+```PowerShell
+Copy-Item .\config.example.psd1 .\config.psd1
+```
+
+Then edit `config.psd1` with the values for your environment.
+`config.psd1` is ignored by Git and should contain Environment-specific configuration only.
+
+## 4. Configure the credential store
+Register a local SecretStore vault:
+```PowerShell
+Register-SecretVault `
+  -Name LocalStore `
+  -ModuleName Microsoft.PowerShell.SecretStore `
+  -DefaultVault
+```
+
+Store the Veeam API credentials (required Administrator privileges on VBR):
+```PowerShell
+Set-Secret -Name VeeamApiUser -Secret 'service-account'
+Set-Secret -name VeeamApiPassword -Secret (Read-Host -AsSecureString)
+```
+
+## 5. Configure non-interactive SecretStore access
+Export the SecretStore password to the path configured in `PathToCredential`:
+
+```PowerShell
+Read-Host -AsSecureString |
+  Export-Clixml -Path 'C:\VeeamInventory\credentials.clixml'
+```
+> Treat this file as sensitive. It allows the automation to unlock the credential store non-interactively.
+
+## 6. Run the collector
+From the repository root:
+
+```PowerShell
+pwsh -File .\VeeamInventory\main.ps1
+```
+
+To use a different configuration file:
+```PowerShell
+pwsh -File .\VeeamInventory\main.ps1 `
+  -ConfigPath .\my-config.psd1
+```
+
+Once the collector works interactively, it can be scheduled with Windows Task Scheduler.
 
 # Why this exists
 
@@ -38,8 +106,8 @@ The project currently collects:
   - Retention in days
   - GFS settings
   - Full Backup Settings (active and synthetic)
-- Backup Job scope [see Scope](##scope)
-- Backup Job Schedule [see Schedule](##schedule)
+- Backup Job scope [see Scope](#scope)
+- Backup Job Schedule [see Schedule](#schedule)
 ## Scope
 
 The scope is a custom schema that formats the data depending on the **Job Type**.

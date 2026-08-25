@@ -1,6 +1,6 @@
 @{
   # Veeam
-  VeeamBaseUrl      = "https://localhost:9443"
+  VeeamBaseUrl      = "https://localhost:9419"
   ApiVersion        = "1.3-rev1"
   PathToCredential  = "C:\VeeamInventory\credentials.clixml"
 

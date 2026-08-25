@@ -1,16 +1,10 @@
-<# cert bypass
-add-type @"
-using System.Net;
-using System.Security.Cryptography.X509Certificates;
-public class TrustAllCertsPolicy : ICertificatePolicy {
-    public bool CheckValidationResult(ServicePoint sp, X509Certificate cert, WebRequest req, int problem) { return true; }
-}
-"@
-[System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-#>
+param(
+    [string]$ConfigPath = (
+        Join-Path $PSScriptRoot '..\config.psd1'
+    )
+)
 
-$repoRoot = SplitPath $PSScriptRoot -Parent
+$repoRoot = Split-Path $PSScriptRoot -Parent
 
 Import-Module "$repoRoot\modules\VeeamApi\VeeamApi.psm1" -Force
 Import-Module "$repoRoot\modules\PSLogging\PSLogging.psm1" -Force
@@ -33,13 +27,6 @@ Import-Module "$repoRoot\modules\PSLogging\PSLogging.psm1" -Force
 . "$PSScriptRoot\Public\Send-N8nWebhook.ps1"
 
 #endregion
-#endregion
-
-param(
-    [string]$ConfigPath = (
-        Join-Path $PSScriptRoot '..\config.psd1'
-    )
-)
 
 function Main {
     param()
