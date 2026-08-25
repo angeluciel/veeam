@@ -7,7 +7,7 @@
 
 </div>
 
-A Powershell automation that audits the backup environment for Veeam Backup & Replication, then publishes the report in an external system.
+A Powershell automation that collects backup and infrastructure information from the Veeam Backup & Replication REST API and converts the results into a normalized payload suitable for external processing.
 
 # Overview
 
@@ -18,14 +18,167 @@ This powershell automation aims to audit and pre-process the backup environment 
 - [X] Windows Agent Backup
 - [X] Hyper-V Backup
 - [X] File Backup
-- [X] Windows Agent Policy
+- [ ] Windows Agent Policy
 
+# Why this exists
 
+I don't wanna pay for SQL Server, and big environments use too much of the database for Veeam ONE's SQL Server Express to be feasible.
 
-# Setting up
+With that in mind, I decided to create a way for me to generate reports like the ones I got in VONE in-house.
 
-## 1. Environment Variables
+# Data it collects
 
+The project currently collects:
+
+- Backup Job ID, name and type
+- Backup Job status (disabled / active)
+- Backup Job priority (if it is high priority or not)
+- Backup Job repository information, including:
+  - Repository Name
+  - Retention in days
+  - GFS settings
+  - Full Backup Settings (active and synthetic)
+- Backup Job scope [see Scope](##scope)
+- Backup Job Schedule [see Schedule](##schedule)
+## Scope
+
+The scope is a custom schema that formats the data depending on the **Job Type**.
+
+All job types share the following fields:
+- *kind*: Identifies the type of scope being represented.
+- *count*: Total number of included objects or sources.
+- *items*: Collections containing the objects included in the job scope.
+
+The contents of `items`, as well as other additional properties, vary depending on the Job Type.
+
+### VM Jobs
+`kind: virtual_machines`
+
+- Containers: Number of included objects that are containers rather than individual VMs.
+
+Each object in `items` contains:
+- Name: Object Name
+- Type: Object Type
+- Host: Host Associated with the object
+- Size: Reported object size
+- Exclusion: Disk excluded from processing for the objects, when configured.
+
+### Computer / Agent Jobs
+`kind: computers`
+
+- agent_type: Agent type configured for the job
+- backup_mode: Backup mode configured for the job
+- files: File-level backup configuration. Returns `none` when no file is configured.
+
+Each object in `items`contains:
+- Name: Computer or protected object name
+- Type: Object Type
+- Path: Object Path
+- protection_group: ID of the associated protection group
+
+When `files` is present, it contains:
+- backup_os: if the OS system files are included
+- personal_files: whether personal files are included
+- custom: custom files or paths configured for backup
+- include_masks
+- exclude_masks
+
+### File Share Jobs
+`kind: file_shares`
+
+Each object in `items`contains:
+
+- path: File share or object path.
+- server_id: ID of the associated file server
+- includes
+- excludes
+
+### Backup Copy Jobs
+`kind: sources`
+
+- mode: source-selection mode configured for the copy job.
+- excluded: names of jobs or objects explicitly excluded from the source scope.
+
+The `count` field represents the combined number of included jobs, repositories, and backups.
+
+Each object in `items` contains:
+- source: Possible values are `job`, `repository`, or `backup`.
+- name: Source object name
+- type: Source object type
+- id: Source object ID
+
+### Windows Workstation
+`kind: windows_workstation`
+
+The workstation scope is resolved through the protection group associated with the job.
+The protection group inventory is queried and only objects of type `WindowsComputer` are included in the final scope.
+
+Each object in `items` contains:
+- name: Workstation name.
+- type: Inventory object type.
+- platform: platform reported for the workstation.
+
+the count field represents the number of workstations returned by the protection group.
+> Note: The current implementation calculated `count` as the total number of objects returned by the endpoint minus one, because the endpoint also appears to return the protection group itself. This behavior still required further validation.
+
+## Schedule
+
+The returned structure depends on the configured schedule type. The `kind` field identifies which format applied.
+
+### Manual
+`kind: manual`
+
+Returned when automatic execution is disabled.
+
+### Daily
+`kind: daily`
+
+collected fields:
+
+- mode: Daily scheduling mode
+- localTime: configured local execution time
+- dayOfWeek: Days on which the jobs run, normalized to iso weekday values.
+
+### Monthly
+`kind: monthly`
+
+- localTime: configured local execution time
+- months: months in which the schedule is active
+- rule: rule determining which day of the month the job runs
+
+The monthly rule can have one of two formats:
+
+For jobs configured to run on the last day of the month:
+`kind: last-day`
+
+For jobs configured around a particular weekday:
+`kind: nth-wekday`
+
+collected rule fields:
+- occurrence: Which occurrence of the weekday should be used within the month.
+- dayOfWeek: Weekday normalized to its ISO weekday value
+
+### Periodic
+`kind: periodic`
+
+Used when the job runs repeatedly at a fixed interval.
+
+Collected fields:
+- interval: numeric frequency between executions.
+- unit: unit associated with that frequency
+
+### Continuous
+`kind: continuous`
+
+Returned when the job is configured for continuous execution
+
+### Chained
+`kind: chained`
+
+Used when the job is configured to start after another job
+
+Collected fields:
+- afterJobName: Name of the job that must compelte before this job is started.
 
 ## Propósito
 
