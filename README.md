@@ -1,6 +1,31 @@
+<div align="center">
+
 # Veeam Inventory
 
-Automação em PowerShell que audita a cobertura de backup do ambiente Veeam Backup & Replication e publica um relatório consolidado em um sistema externo de orquestração/alertas.
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+![version](https://img.shields.io/badge/version-0.1-blue)
+
+</div>
+
+A Powershell automation that audits the backup environment for Veeam Backup & Replication, then publishes the report in an external system.
+
+# Overview
+
+This powershell automation aims to audit and pre-process the backup environment for Veeam Backup & Replication for external uses, such as monthly reports.
+
+## Currently Tested Job Types
+
+- [X] Windows Agent Backup
+- [X] Hyper-V Backup
+- [X] File Backup
+- [X] Windows Agent Policy
+
+
+
+# Setting up
+
+## 1. Environment Variables
+
 
 ## Propósito
 

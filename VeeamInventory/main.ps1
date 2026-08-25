@@ -10,19 +10,10 @@ public class TrustAllCertsPolicy : ICertificatePolicy {
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 #>
 
-$config = [PSCustomObject]@{
-    N8NUri           = ""
-    VeeamBaseUrl     = ""
-    PathToCredential = ""
-    ApiVersion       = "1.3-rev1"
-    SchemaVersion    = "1"
-    MaxHoursBackup   = 36
+$repoRoot = SplitPath $PSScriptRoot -Parent
 
-    # --- Logging ---
-    LogDirectory     = ""
-    LogLevel         = "INFO"   # DEBUG | INFO | WARN | ERROR
-    LogRetentionDays = 30
-}
+Import-Module "$repoRoot\modules\VeeamApi\VeeamApi.psm1" -Force
+Import-Module "$repoRoot\modules\PSLogging\PSLogging.psm1" -Force
 
 #region - Importing Functions
 
@@ -44,13 +35,47 @@ $config = [PSCustomObject]@{
 #endregion
 #endregion
 
-function Main {
+param(
+    [string]$ConfigPath = (
+        Join-Path $PSScriptRoot '..\config.psd1'
+    )
+)
 
+function Main {
     param()
+
+    if (-not (Test-Path $ConfigPath)) {
+        throw @"
+        Configuration file not found:
+        $ConfigPath
+
+        Copy config.example.psd1 to config.psd1 and configure it before running.
+"@
+    }
+
+    $config = [PSCustomObject](
+        Import-PowerShellDataFile -Path $ConfigPath
+    )
+
+    $requriedSettings = @(
+        'VeeamBaseUrl'
+        'ApiVersion'
+        'PathToCredential'
+    )
+
+    foreach($setting in $requriedSettings) {
+        if ([string]::IsNullOrWhiteSpace($config.$setting)) {
+            throw "Required configuration value '$setting' is missing."
+        }
+    }
 
     try {
         Initialize-Logging -Directory $config.LogDirectory -RetentionDays $config.LogRetentionDays
-        Initialize-VeeamApi -BaseUrl $config.VeeamBaseUrl -ApiVersion '1.2-rev1' -MaxRetries 3 -CredentialPath $config.PathToCredential
+        Initialize-VeeamApi `
+            -BaseUrl $config.VeeamBaseUrl `
+            -ApiVersion $config.ApiVersion `
+            -MaxRetries 3 `
+            -CredentialPath $config.PathToCredential
 
         Unlock-VeeamCredentialStore
 
@@ -110,8 +135,8 @@ function Main {
         $body = [pscustomobject]@{
             schemaVersion       = $config.SchemaVersion
             sentAt              = (Get-Date).ToUniversalTime().ToString('o')
-            client_name         = 'client'
-            client_display_name = 'client'
+            client_name         = $config.ClientName
+            client_display_name = $config.ClientDisplayName
             runId               = [guid]::NewGuid().ToString()
             maxHoursBackup      = $config.MaxHoursBackup
             data                = ($payload | ConvertFrom-Json)
