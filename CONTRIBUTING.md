@@ -142,8 +142,8 @@ Rules of thumb:
 - `-SkipCertificateCheck` is used throughout because most VBR deployments use a
   self-signed certificate. Do not add new certificate-handling behavior without
   discussing it in an issue first.
-- Keys in the emitted payload are `snake_case` or `camelCase` as already used —
-  match the surrounding structure rather than introducing a third convention.
+- Keys in the emitted payload are `snake_case` or `camelCase` as already used.
+  Match the surrounding structure rather than introducing a third convention.
 
 ### Language
 
@@ -166,7 +166,7 @@ This is the most common contribution. The steps:
 3. Document the new `kind` and its fields in the **Scope** section of the
    README, following the existing format.
 4. Add a row to the job type table at the top of the README, and be honest in
-   the Tested column — `Partial` is a useful and acceptable answer.
+   the Tested column. Partial is a useful and acceptable answer.
 5. Include a sanitized sample of the raw Veeam response for that job type in the
    PR description. It makes review possible without access to your environment.
 
@@ -199,8 +199,8 @@ When you add a key that `main.ps1` reads from the config file:
 - Documentation-only and typo fixes are welcome and do not need any of the
   above ceremony.
 
-If you are planning something large — replacing the webhook destination with a
-pluggable output, swapping the credential backend, adding a test harness — open
+If you are planning something large, like replacing the webhook destination with a
+pluggable output, swapping the credential backend, adding a test harness, please open
 an issue first so the interface can be agreed before you write the code.
 
 ## Security
