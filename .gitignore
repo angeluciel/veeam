@@ -1,0 +1,22 @@
+# Credenciais / segredos
+*.clixml
+*credential*
+*secret*
+*.pfx
+*.pem
+*.key
+*.env
+.env.*
+
+# Logs
+*.log
+logs/
+C:\Scripts\Veeam\logs/
+
+# PowerShell
+*.ps1xml.bak
+
+# OS / editor
+.vscode/
+Thumbs.db
+.DS_Store
