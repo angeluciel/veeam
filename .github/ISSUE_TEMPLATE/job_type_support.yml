@@ -1,0 +1,92 @@
+name: Job type support
+description: Report an unsupported job type, or a supported one that normalizes incorrectly
+labels: ["job-type"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for anything about the scope normalization in
+        `Private/Adapter/ConvertTo-JobObject.ps1`: a job type that lands in the
+        `unhandled` bucket, or one that is mapped but produces wrong or missing
+        fields.
+
+        The single most useful thing you can attach is a sanitized raw response
+        for the job. Without it, this cannot be implemented by anyone who does
+        not have your environment.
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What is this about
+      options:
+        - A job type that is not supported at all
+        - A supported job type that produces incorrect output
+        - A supported job type that is missing fields
+    validations:
+      required: true
+
+  - type: input
+    id: job-type-string
+    attributes:
+      label: Job type string
+      description: The exact value of the type field returned by /api/v1/jobs for this job.
+      placeholder: "BackupCopy"
+    validations:
+      required: true
+
+  - type: input
+    id: vbr-version
+    attributes:
+      label: Veeam Backup and Replication version
+      placeholder: "12.3.1.1139"
+    validations:
+      required: true
+
+  - type: textarea
+    id: raw-response
+    attributes:
+      label: Sanitized job response
+      description: |
+        The object for this job from /api/v1/jobs, with names, IDs and paths
+        replaced by placeholders. Keep the structure and the field names intact,
+        including empty and null fields.
+      render: json
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-output
+    attributes:
+      label: What the collector currently produces
+      description: The scope block from the payload for this job, if any.
+      render: json
+
+  - type: textarea
+    id: fields
+    attributes:
+      label: Which fields matter
+      description: |
+        What should end up in the scope for this job type, and why. If there is
+        an equivalent in an already supported type, say which, so the naming can
+        stay consistent.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: implementing
+    attributes:
+      label: Are you planning to implement this
+      options:
+        - "Yes, I will open a pull request"
+        - "Maybe, with some guidance"
+        - "No, reporting only"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Before submitting
+      options:
+        - label: I removed credentials, host names, VM names, client names, object IDs and paths from everything I pasted
+          required: true

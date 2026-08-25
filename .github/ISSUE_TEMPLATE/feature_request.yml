@@ -1,0 +1,78 @@
+name: Feature or enhancement
+description: Propose a change to how the collector works
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For a new Veeam job type, use the Job type support form instead.
+
+        If your proposal changes the credential handling, the transport to
+        Veeam, or the destination of the payload, please describe the interface
+        you have in mind before writing code. Those are the parts of the project
+        with the highest cost of getting wrong.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What is difficult, missing or fragile today. Describe the situation, not the solution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area affected
+      multiple: true
+      options:
+        - Veeam API module (auth, retry, transport)
+        - Credential handling
+        - Inventory collection
+        - Backup status evaluation
+        - Job and repository normalization
+        - Outgoing payload
+        - Webhook or output destination
+        - Logging
+        - Configuration
+        - Documentation
+        - Testing and tooling
+    validations:
+      required: true
+
+  - type: dropdown
+    id: payload-impact
+    attributes:
+      label: Does this change the payload sent downstream
+      description: Adding, removing, renaming or retyping a field means SchemaVersion has to be bumped.
+      options:
+        - "No"
+        - "Yes, additively only"
+        - "Yes, it is a breaking change for consumers"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Including doing nothing, or handling it downstream instead of in the collector.
+
+  - type: dropdown
+    id: implementing
+    attributes:
+      label: Are you planning to implement this
+      options:
+        - "Yes, I will open a pull request"
+        - "Maybe, with some guidance"
+        - "No, suggesting only"
+    validations:
+      required: true
